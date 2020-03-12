@@ -13,9 +13,13 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.plm.common.constant.HttpStatus;
 import com.plm.common.exception.BaseException;
 import com.plm.common.exception.CustomException;
-import com.plm.common.exception.DemoModeException;
 import com.plm.common.utils.StringUtils;
 import com.plm.framework.web.domain.AjaxResult;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Path;
+import java.util.Set;
 
 /**
  * 全局异常处理器
@@ -107,11 +111,21 @@ public class GlobalExceptionHandler
     }
 
     /**
-     * 演示模式异常
+     * 统一处理请求参数校验(普通传参)
+     *
+     * @param e ConstraintViolationException
+     * @return
      */
-    @ExceptionHandler(DemoModeException.class)
-    public AjaxResult demoModeException(DemoModeException e)
-    {
-        return AjaxResult.error("演示模式，不允许操作");
+    @ExceptionHandler(value = ConstraintViolationException.class)
+    public AjaxResult handleConstraintViolationException(ConstraintViolationException e) {
+        StringBuilder message = new StringBuilder();
+        Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
+        for (ConstraintViolation<?> violation : violations) {
+            Path path = violation.getPropertyPath();
+            String[] pathArr = StringUtils.splitByWholeSeparatorPreserveAllTokens(path.toString(), ".");
+            message.append(pathArr[1]).append(violation.getMessage()).append(",");
+        }
+        message = new StringBuilder(message.substring(0, message.length() - 1));
+        return AjaxResult.error(HttpStatus.BAD_REQUEST, message.toString());
     }
 }
