@@ -2,6 +2,7 @@ package com.plm.framework.config;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,14 +22,15 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  * Swagger2的接口配置
- * 
- * @author cwh
+ *
+ * @author plm
  */
 @Configuration
 @EnableSwagger2
-public class SwaggerConfig
-{
-    /** 系统基础配置 */
+public class SwaggerConfig {
+    /**
+     * 系统基础配置
+     */
     @Autowired
     private PlatformConfig platformConfig;
 
@@ -36,8 +38,7 @@ public class SwaggerConfig
      * 创建API
      */
     @Bean
-    public Docket createRestApi()
-    {
+    public Docket createRestApi() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .pathMapping("/dev-api")
                 // 用来创建该API的基本信息，展示在文档的页面中（自定义展示的信息）
@@ -59,18 +60,16 @@ public class SwaggerConfig
     /**
      * 安全模式，这里指定token通过Authorization头请求头传递
      */
-    private List<ApiKey> securitySchemes()
-    {
+    private List<ApiKey> securitySchemes() {
         List<ApiKey> apiKeyList = new ArrayList<ApiKey>();
         apiKeyList.add(new ApiKey("Authorization", "Authorization", "header"));
         return apiKeyList;
     }
-    
+
     /**
      * 安全上下文
      */
-    private List<SecurityContext> securityContexts()
-    {
+    private List<SecurityContext> securityContexts() {
         List<SecurityContext> securityContexts = new ArrayList<>();
         securityContexts.add(
                 SecurityContext.builder()
@@ -79,12 +78,11 @@ public class SwaggerConfig
                         .build());
         return securityContexts;
     }
-    
+
     /**
      * 默认的安全上引用
      */
-    private List<SecurityReference> defaultAuth()
-    {
+    private List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
@@ -96,8 +94,7 @@ public class SwaggerConfig
     /**
      * 添加摘要信息
      */
-    private ApiInfo apiInfo()
-    {
+    private ApiInfo apiInfo() {
         // 用ApiInfoBuilder进行定制
         return new ApiInfoBuilder()
                 // 设置标题

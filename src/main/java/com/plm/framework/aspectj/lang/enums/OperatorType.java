@@ -2,11 +2,10 @@ package com.plm.framework.aspectj.lang.enums;
 
 /**
  * 操作人类别
- * 
+ *
  * @author cwh
  */
-public enum OperatorType
-{
+public enum OperatorType {
     /**
      * 其它
      */

@@ -6,19 +6,19 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import com.plm.framework.aspectj.lang.enums.DataSourceType;
 
 /**
  * 自定义多数据源切换注解
- * 
+ *
  * @author cwh
  */
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-public @interface DataSource
-{
+public @interface DataSource {
     /**
      * 切换数据源名称
      */

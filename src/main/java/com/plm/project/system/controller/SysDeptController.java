@@ -1,6 +1,8 @@
 package com.plm.project.system.controller;
 
 import java.util.List;
+
+import com.plm.framework.web.domain.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -17,118 +19,103 @@ import com.plm.common.utils.SecurityUtils;
 import com.plm.framework.aspectj.lang.annotation.Log;
 import com.plm.framework.aspectj.lang.enums.BusinessType;
 import com.plm.framework.web.controller.BaseController;
-import com.plm.framework.web.domain.AjaxResult;
 import com.plm.project.system.domain.SysDept;
 import com.plm.project.system.service.ISysDeptService;
 
 /**
  * 部门信息
- * 
+ *
  * @author cwh
  */
 @RestController
 @RequestMapping("/system/dept")
-public class SysDeptController extends BaseController
-{
+public class SysDeptController extends BaseController {
     @Autowired
     private ISysDeptService deptService;
 
     /**
      * 获取部门列表
      */
-    @PreAuthorize("@ss.hasPermi('system:dept:list')")
+    @PreAuthorize("@security.havePermission('system:dept:list')")
     @GetMapping("/list")
-    public AjaxResult list(SysDept dept)
-    {
+    public ResultEntity list(SysDept dept) {
         List<SysDept> depts = deptService.selectDeptList(dept);
-        return AjaxResult.success(depts);
+        return ResultEntity.success(depts);
     }
 
     /**
      * 根据部门编号获取详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:dept:query')")
+    @PreAuthorize("@security.havePermission('system:dept:query')")
     @GetMapping(value = "/{deptId}")
-    public AjaxResult getInfo(@PathVariable Long deptId)
-    {
-        return AjaxResult.success(deptService.selectDeptById(deptId));
+    public ResultEntity getInfo(@PathVariable Long deptId) {
+        return ResultEntity.success(deptService.selectDeptById(deptId));
     }
 
     /**
      * 获取部门下拉树列表
      */
     @GetMapping("/treeselect")
-    public AjaxResult treeselect(SysDept dept)
-    {
+    public ResultEntity treeselect(SysDept dept) {
         List<SysDept> depts = deptService.selectDeptList(dept);
-        return AjaxResult.success(deptService.buildDeptTreeSelect(depts));
+        return ResultEntity.success(deptService.buildDeptTreeSelect(depts));
     }
 
     /**
      * 加载对应角色部门列表树
      */
     @GetMapping(value = "/roleDeptTreeselect/{roleId}")
-    public AjaxResult roleDeptTreeselect(@PathVariable("roleId") Long roleId)
-    {
+    public ResultEntity roleDeptTreeselect(@PathVariable("roleId") Long roleId) {
         List<SysDept> depts = deptService.selectDeptList(new SysDept());
-        AjaxResult ajax = AjaxResult.success();
-        ajax.put("checkedKeys", deptService.selectDeptListByRoleId(roleId));
-        ajax.put("depts", deptService.buildDeptTreeSelect(depts));
-        return ajax;
+        ResultEntity result = ResultEntity.success();
+        result.put("checkedKeys", deptService.selectDeptListByRoleId(roleId));
+        result.put("depts", deptService.buildDeptTreeSelect(depts));
+        return result;
     }
 
     /**
      * 新增部门
      */
-    @PreAuthorize("@ss.hasPermi('system:dept:add')")
+    @PreAuthorize("@security.havePermission('system:dept:add')")
     @Log(title = "部门管理", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody SysDept dept)
-    {
-        if (UserConstants.NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept)))
-        {
-            return AjaxResult.error("新增部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+    public ResultEntity add(@Validated @RequestBody SysDept dept) {
+        if (UserConstants.NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept))) {
+            return ResultEntity.error("新增部门'" + dept.getDeptName() + "'失败，部门名称已存在");
         }
         dept.setCreateBy(SecurityUtils.getUsername());
-        return toAjax(deptService.insertDept(dept));
+        return result(deptService.insertDept(dept));
     }
 
     /**
      * 修改部门
      */
-    @PreAuthorize("@ss.hasPermi('system:dept:edit')")
+    @PreAuthorize("@security.havePermission('system:dept:edit')")
     @Log(title = "部门管理", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@Validated @RequestBody SysDept dept)
-    {
-        if (UserConstants.NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept)))
-        {
-            return AjaxResult.error("修改部门'" + dept.getDeptName() + "'失败，部门名称已存在");
-        }
-        else if (dept.getParentId().equals(dept.getDeptId()))
-        {
-            return AjaxResult.error("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
+    public ResultEntity edit(@Validated @RequestBody SysDept dept) {
+        if (UserConstants.NOT_UNIQUE.equals(deptService.checkDeptNameUnique(dept))) {
+            return ResultEntity.error("修改部门'" + dept.getDeptName() + "'失败，部门名称已存在");
+        } else if (dept.getParentId().equals(dept.getDeptId())) {
+            return ResultEntity.error("修改部门'" + dept.getDeptName() + "'失败，上级部门不能是自己");
         }
         dept.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(deptService.updateDept(dept));
+        return result(deptService.updateDept(dept));
     }
 
     /**
      * 删除部门
      */
-    @PreAuthorize("@ss.hasPermi('system:dept:remove')")
+    @PreAuthorize("@security.havePermission('system:dept:remove')")
     @Log(title = "部门管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{deptId}")
-    public AjaxResult remove(@PathVariable Long deptId)
-    {
-        if (deptService.hasChildByDeptId(deptId))
-        {
-            return AjaxResult.error("存在下级部门,不允许删除");
+    public ResultEntity remove(@PathVariable Long deptId) {
+        if (deptService.hasChildByDeptId(deptId)) {
+            return ResultEntity.error("存在下级部门,不允许删除");
         }
-        if (deptService.checkDeptExistUser(deptId))
-        {
-            return AjaxResult.error("部门存在用户,不允许删除");
+        if (deptService.checkDeptExistUser(deptId)) {
+            return ResultEntity.error("部门存在用户,不允许删除");
         }
-        return toAjax(deptService.deleteDeptById(deptId));
+        return result(deptService.deleteDeptById(deptId));
     }
 }

@@ -2,6 +2,7 @@ package com.plm.framework.security.service;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.plm.project.system.domain.SysUser;
@@ -10,12 +11,11 @@ import com.plm.project.system.service.ISysRoleService;
 
 /**
  * 用户权限处理
- * 
+ *
  * @author cwh
  */
 @Component
-public class SysPermissionService
-{
+public class SysPermissionService {
     @Autowired
     private ISysRoleService roleService;
 
@@ -28,16 +28,12 @@ public class SysPermissionService
      * @param user 用户信息
      * @return 角色权限信息
      */
-    public Set<String> getRolePermission(SysUser user)
-    {
+    public Set<String> getRolePermission(SysUser user) {
         Set<String> roles = new HashSet<String>();
         // 管理员拥有所有权限
-        if (user.isAdmin())
-        {
+        if (user.isAdmin()) {
             roles.add("admin");
-        }
-        else
-        {
+        } else {
             roles.addAll(roleService.selectRolePermissionByUserId(user.getUserId()));
         }
         return roles;
@@ -49,16 +45,12 @@ public class SysPermissionService
      * @param user 用户信息
      * @return 菜单权限信息
      */
-    public Set<String> getMenuPermission(SysUser user)
-    {
+    public Set<String> getMenuPermission(SysUser user) {
         Set<String> perms = new HashSet<String>();
         // 管理员拥有所有权限
-        if (user.isAdmin())
-        {
+        if (user.isAdmin()) {
             perms.add("*:*:*");
-        }
-        else
-        {
+        } else {
             perms.addAll(menuService.selectMenuPermsByUserId(user.getUserId()));
         }
         return perms;

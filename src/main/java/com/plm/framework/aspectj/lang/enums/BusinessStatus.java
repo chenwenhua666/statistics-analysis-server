@@ -2,12 +2,10 @@ package com.plm.framework.aspectj.lang.enums;
 
 /**
  * 操作状态
- * 
- * @author cwh
  *
+ * @author cwh
  */
-public enum BusinessStatus
-{
+public enum BusinessStatus {
     /**
      * 成功
      */

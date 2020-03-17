@@ -1,6 +1,8 @@
 package com.plm.project.system.controller;
 
 import java.io.IOException;
+
+import com.plm.framework.web.domain.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,19 +21,17 @@ import com.plm.framework.config.PlatformConfig;
 import com.plm.framework.security.LoginUser;
 import com.plm.framework.security.service.TokenService;
 import com.plm.framework.web.controller.BaseController;
-import com.plm.framework.web.domain.AjaxResult;
 import com.plm.project.system.domain.SysUser;
 import com.plm.project.system.service.ISysUserService;
 
 /**
  * 个人信息 业务处理
- * 
+ *
  * @author cwh
  */
 @RestController
 @RequestMapping("/system/user/profile")
-public class SysProfileController extends BaseController
-{
+public class SysProfileController extends BaseController {
     @Autowired
     private ISysUserService userService;
 
@@ -42,14 +42,13 @@ public class SysProfileController extends BaseController
      * 个人信息
      */
     @GetMapping
-    public AjaxResult profile()
-    {
+    public ResultEntity profile() {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         SysUser user = loginUser.getUser();
-        AjaxResult ajax = AjaxResult.success(user);
-        ajax.put("roleGroup", userService.selectUserRoleGroup(loginUser.getUsername()));
-        ajax.put("postGroup", userService.selectUserPostGroup(loginUser.getUsername()));
-        return ajax;
+        ResultEntity result = ResultEntity.success(user);
+        result.put("roleGroup", userService.selectUserRoleGroup(loginUser.getUsername()));
+        result.put("postGroup", userService.selectUserPostGroup(loginUser.getUsername()));
+        return result;
     }
 
     /**
@@ -57,10 +56,8 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult updateProfile(@RequestBody SysUser user)
-    {
-        if (userService.updateUserProfile(user) > 0)
-        {
+    public ResultEntity updateProfile(@RequestBody SysUser user) {
+        if (userService.updateUserProfile(user) > 0) {
             LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
             // 更新缓存用户信息
             loginUser.getUser().setNickName(user.getNickName());
@@ -68,9 +65,9 @@ public class SysProfileController extends BaseController
             loginUser.getUser().setEmail(user.getEmail());
             loginUser.getUser().setSex(user.getSex());
             tokenService.setLoginUser(loginUser);
-            return AjaxResult.success();
+            return ResultEntity.success();
         }
-        return AjaxResult.error("修改个人信息异常，请联系管理员");
+        return ResultEntity.error("修改个人信息异常，请联系管理员");
     }
 
     /**
@@ -78,27 +75,23 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
     @PutMapping("/updatePwd")
-    public AjaxResult updatePwd(String oldPassword, String newPassword)
-    {
+    public ResultEntity updatePwd(String oldPassword, String newPassword) {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         String userName = loginUser.getUsername();
         String password = loginUser.getPassword();
-        if (!SecurityUtils.matchesPassword(oldPassword, password))
-        {
-            return AjaxResult.error("修改密码失败，旧密码错误");
+        if (!SecurityUtils.matchesPassword(oldPassword, password)) {
+            return ResultEntity.error("修改密码失败，旧密码错误");
         }
-        if (SecurityUtils.matchesPassword(newPassword, password))
-        {
-            return AjaxResult.error("新密码不能与旧密码相同");
+        if (SecurityUtils.matchesPassword(newPassword, password)) {
+            return ResultEntity.error("新密码不能与旧密码相同");
         }
-        if (userService.resetUserPwd(userName, SecurityUtils.encryptPassword(newPassword)) > 0)
-        {
+        if (userService.resetUserPwd(userName, SecurityUtils.encryptPassword(newPassword)) > 0) {
             // 更新缓存用户密码
             loginUser.getUser().setPassword(SecurityUtils.encryptPassword(newPassword));
             tokenService.setLoginUser(loginUser);
-            return AjaxResult.success();
+            return ResultEntity.success();
         }
-        return AjaxResult.error("修改密码异常，请联系管理员");
+        return ResultEntity.error("修改密码异常，请联系管理员");
     }
 
     /**
@@ -106,15 +99,12 @@ public class SysProfileController extends BaseController
      */
     @Log(title = "用户头像", businessType = BusinessType.UPDATE)
     @PostMapping("/avatar")
-    public AjaxResult avatar(@RequestParam("avatarfile") MultipartFile file) throws IOException
-    {
-        if (!file.isEmpty())
-        {
+    public ResultEntity avatar(@RequestParam("avatarfile") MultipartFile file) throws IOException {
+        if (!file.isEmpty()) {
             LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
             String avatar = FileUploadUtils.upload(PlatformConfig.getAvatarPath(), file);
-            if (userService.updateUserAvatar(loginUser.getUsername(), avatar))
-            {
-                AjaxResult ajax = AjaxResult.success();
+            if (userService.updateUserAvatar(loginUser.getUsername(), avatar)) {
+                ResultEntity ajax = ResultEntity.success();
                 ajax.put("imgUrl", avatar);
                 // 更新缓存用户头像
                 loginUser.getUser().setAvatar(avatar);
@@ -122,6 +112,6 @@ public class SysProfileController extends BaseController
                 return ajax;
             }
         }
-        return AjaxResult.error("上传图片异常，请联系管理员");
+        return ResultEntity.error("上传图片异常，请联系管理员");
     }
 }

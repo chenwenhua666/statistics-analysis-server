@@ -1,5 +1,6 @@
 package com.plm.framework.web.exception;
 
+import com.plm.framework.web.domain.ResultEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,7 +15,6 @@ import com.plm.common.constant.HttpStatus;
 import com.plm.common.exception.BaseException;
 import com.plm.common.exception.CustomException;
 import com.plm.common.utils.StringUtils;
-import com.plm.framework.web.domain.AjaxResult;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -23,91 +23,80 @@ import java.util.Set;
 
 /**
  * 全局异常处理器
- * 
+ *
  * @author cwh
  */
 @RestControllerAdvice
-public class GlobalExceptionHandler
-{
+public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * 基础异常
      */
     @ExceptionHandler(BaseException.class)
-    public AjaxResult baseException(BaseException e)
-    {
-        return AjaxResult.error(e.getMessage());
+    public ResultEntity baseException(BaseException e) {
+        return ResultEntity.error(e.getMessage());
     }
 
     /**
      * 业务异常
      */
     @ExceptionHandler(CustomException.class)
-    public AjaxResult businessException(CustomException e)
-    {
-        if (StringUtils.isNull(e.getCode()))
-        {
-            return AjaxResult.error(e.getMessage());
+    public ResultEntity businessException(CustomException e) {
+        if (StringUtils.isNull(e.getCode())) {
+            return ResultEntity.error(e.getMessage());
         }
-        return AjaxResult.error(e.getCode(), e.getMessage());
+        return ResultEntity.error(e.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public AjaxResult handlerNoFoundException(Exception e)
-    {
+    public ResultEntity handlerNoFoundException(Exception e) {
         log.error(e.getMessage(), e);
-        return AjaxResult.error(HttpStatus.NOT_FOUND, "路径不存在，请检查路径是否正确");
+        return ResultEntity.error(HttpStatus.NOT_FOUND, "路径不存在，请检查路径是否正确");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public AjaxResult handleAuthorizationException(AccessDeniedException e)
-    {
+    public ResultEntity handleAuthorizationException(AccessDeniedException e) {
         log.error(e.getMessage());
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "没有权限，请联系管理员授权");
+        return ResultEntity.error(HttpStatus.FORBIDDEN, "没有权限，请联系管理员授权");
     }
 
     @ExceptionHandler(AccountExpiredException.class)
-    public AjaxResult handleAccountExpiredException(AccountExpiredException e)
-    {
+    public ResultEntity handleAccountExpiredException(AccountExpiredException e) {
         log.error(e.getMessage(), e);
-        return AjaxResult.error(e.getMessage());
+        return ResultEntity.error(e.getMessage());
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public AjaxResult handleUsernameNotFoundException(UsernameNotFoundException e)
-    {
+    public ResultEntity handleUsernameNotFoundException(UsernameNotFoundException e) {
         log.error(e.getMessage(), e);
-        return AjaxResult.error(e.getMessage());
+        return ResultEntity.error(e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public AjaxResult handleException(Exception e)
-    {
+    public ResultEntity handleException(Exception e) {
         log.error(e.getMessage(), e);
-        return AjaxResult.error(e.getMessage());
+        return ResultEntity.error(e.getMessage());
     }
 
     /**
      * 自定义验证异常
      */
     @ExceptionHandler(BindException.class)
-    public AjaxResult validatedBindException(BindException e)
-    {
+    public ResultEntity validatedBindException(BindException e) {
         log.error(e.getMessage(), e);
         String message = e.getAllErrors().get(0).getDefaultMessage();
-        return AjaxResult.error(message);
+        return ResultEntity.error(message);
     }
 
     /**
      * 自定义验证异常
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Object validExceptionHandler(MethodArgumentNotValidException e)
-    {
+    public Object validExceptionHandler(MethodArgumentNotValidException e) {
         log.error(e.getMessage(), e);
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
-        return AjaxResult.error(message);
+        return ResultEntity.error(message);
     }
 
     /**
@@ -117,7 +106,7 @@ public class GlobalExceptionHandler
      * @return
      */
     @ExceptionHandler(value = ConstraintViolationException.class)
-    public AjaxResult handleConstraintViolationException(ConstraintViolationException e) {
+    public ResultEntity handleConstraintViolationException(ConstraintViolationException e) {
         StringBuilder message = new StringBuilder();
         Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
         for (ConstraintViolation<?> violation : violations) {
@@ -126,6 +115,6 @@ public class GlobalExceptionHandler
             message.append(pathArr[1]).append(violation.getMessage()).append(",");
         }
         message = new StringBuilder(message.substring(0, message.length() - 1));
-        return AjaxResult.error(HttpStatus.BAD_REQUEST, message.toString());
+        return ResultEntity.error(HttpStatus.BAD_REQUEST, message.toString());
     }
 }

@@ -1,6 +1,8 @@
 package com.plm.project.system.controller;
 
 import java.util.List;
+
+import com.plm.framework.web.domain.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -23,7 +25,6 @@ import com.plm.framework.aspectj.lang.enums.BusinessType;
 import com.plm.framework.security.LoginUser;
 import com.plm.framework.security.service.TokenService;
 import com.plm.framework.web.controller.BaseController;
-import com.plm.framework.web.domain.AjaxResult;
 import com.plm.framework.web.page.TableDataInfo;
 import com.plm.project.system.domain.SysUser;
 import com.plm.project.system.service.ISysPostService;
@@ -32,13 +33,12 @@ import com.plm.project.system.service.ISysUserService;
 
 /**
  * 用户信息
- * 
+ *
  * @author cwh
  */
 @RestController
 @RequestMapping("/system/user")
-public class SysUserController extends BaseController
-{
+public class SysUserController extends BaseController {
     @Autowired
     private ISysUserService userService;
 
@@ -54,41 +54,37 @@ public class SysUserController extends BaseController
     /**
      * 获取用户列表
      */
-    @PreAuthorize("@ss.hasPermi('system:user:list')")
+    @PreAuthorize("@security.havePermission('system:user:list')")
     @GetMapping("/list")
-    public TableDataInfo list(SysUser user)
-    {
+    public TableDataInfo list(SysUser user) {
         startPage();
         List<SysUser> list = userService.selectUserList(user);
         return getDataTable(list);
     }
 
     @Log(title = "用户管理", businessType = BusinessType.EXPORT)
-    @PreAuthorize("@ss.hasPermi('system:user:export')")
+    @PreAuthorize("@security.havePermission('system:user:export')")
     @GetMapping("/export")
-    public AjaxResult export(SysUser user)
-    {
+    public ResultEntity export(SysUser user) {
         List<SysUser> list = userService.selectUserList(user);
         ExcelUtil<SysUser> util = new ExcelUtil<SysUser>(SysUser.class);
         return util.exportExcel(list, "用户数据");
     }
 
     @Log(title = "用户管理", businessType = BusinessType.IMPORT)
-    @PreAuthorize("@ss.hasPermi('system:user:import')")
+    @PreAuthorize("@security.havePermission('system:user:import')")
     @PostMapping("/importData")
-    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
-    {
+    public ResultEntity importData(MultipartFile file, boolean updateSupport) throws Exception {
         ExcelUtil<SysUser> util = new ExcelUtil<SysUser>(SysUser.class);
         List<SysUser> userList = util.importExcel(file.getInputStream());
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         String operName = loginUser.getUsername();
         String message = userService.importUser(userList, updateSupport, operName);
-        return AjaxResult.success(message);
+        return ResultEntity.success(message);
     }
 
     @GetMapping("/importTemplate")
-    public AjaxResult importTemplate()
-    {
+    public ResultEntity importTemplate() {
         ExcelUtil<SysUser> util = new ExcelUtil<SysUser>(SysUser.class);
         return util.importTemplateExcel("用户数据");
     }
@@ -96,103 +92,88 @@ public class SysUserController extends BaseController
     /**
      * 根据用户编号获取详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:user:query')")
-    @GetMapping(value = { "/", "/{userId}" })
-    public AjaxResult getInfo(@PathVariable(value = "userId", required = false) Long userId)
-    {
-        AjaxResult ajax = AjaxResult.success();
-        ajax.put("roles", roleService.selectRoleAll());
-        ajax.put("posts", postService.selectPostAll());
-        if (StringUtils.isNotNull(userId))
-        {
-            ajax.put(AjaxResult.DATA_TAG, userService.selectUserById(userId));
-            ajax.put("postIds", postService.selectPostListByUserId(userId));
-            ajax.put("roleIds", roleService.selectRoleListByUserId(userId));
+    @PreAuthorize("@security.havePermission('system:user:query')")
+    @GetMapping(value = {"/", "/{userId}"})
+    public ResultEntity getInfo(@PathVariable(value = "userId", required = false) Long userId) {
+        ResultEntity result = ResultEntity.success();
+        result.put("roles", roleService.selectRoleAll());
+        result.put("posts", postService.selectPostAll());
+        if (StringUtils.isNotNull(userId)) {
+            result.put(ResultEntity.DATA_TAG, userService.selectUserById(userId));
+            result.put("postIds", postService.selectPostListByUserId(userId));
+            result.put("roleIds", roleService.selectRoleListByUserId(userId));
         }
-        return ajax;
+        return result;
     }
 
     /**
      * 新增用户
      */
-    @PreAuthorize("@ss.hasPermi('system:user:add')")
+    @PreAuthorize("@security.havePermission('system:user:add')")
     @Log(title = "用户管理", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody SysUser user)
-    {
-        if (UserConstants.NOT_UNIQUE.equals(userService.checkUserNameUnique(user.getUserName())))
-        {
-            return AjaxResult.error("新增用户'" + user.getUserName() + "'失败，登录账号已存在");
-        }
-        else if (UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user)))
-        {
-            return AjaxResult.error("新增用户'" + user.getUserName() + "'失败，手机号码已存在");
-        }
-        else if (UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user)))
-        {
-            return AjaxResult.error("新增用户'" + user.getUserName() + "'失败，邮箱账号已存在");
+    public ResultEntity add(@Validated @RequestBody SysUser user) {
+        if (UserConstants.NOT_UNIQUE.equals(userService.checkUserNameUnique(user.getUserName()))) {
+            return ResultEntity.error("新增用户'" + user.getUserName() + "'失败，登录账号已存在");
+        } else if (UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
+            return ResultEntity.error("新增用户'" + user.getUserName() + "'失败，手机号码已存在");
+        } else if (UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
+            return ResultEntity.error("新增用户'" + user.getUserName() + "'失败，邮箱账号已存在");
         }
         user.setCreateBy(SecurityUtils.getUsername());
         user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
-        return toAjax(userService.insertUser(user));
+        return result(userService.insertUser(user));
     }
 
     /**
      * 修改用户
      */
-    @PreAuthorize("@ss.hasPermi('system:user:edit')")
+    @PreAuthorize("@security.havePermission('system:user:edit')")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@Validated @RequestBody SysUser user)
-    {
+    public ResultEntity edit(@Validated @RequestBody SysUser user) {
         userService.checkUserAllowed(user);
-        if (UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user)))
-        {
-            return AjaxResult.error("修改用户'" + user.getUserName() + "'失败，手机号码已存在");
-        }
-        else if (UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user)))
-        {
-            return AjaxResult.error("修改用户'" + user.getUserName() + "'失败，邮箱账号已存在");
+        if (UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
+            return ResultEntity.error("修改用户'" + user.getUserName() + "'失败，手机号码已存在");
+        } else if (UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
+            return ResultEntity.error("修改用户'" + user.getUserName() + "'失败，邮箱账号已存在");
         }
         user.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(userService.updateUser(user));
+        return result(userService.updateUser(user));
     }
 
     /**
      * 删除用户
      */
-    @PreAuthorize("@ss.hasPermi('system:user:remove')")
+    @PreAuthorize("@security.havePermission('system:user:remove')")
     @Log(title = "用户管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{userIds}")
-    public AjaxResult remove(@PathVariable Long[] userIds)
-    {
-        return toAjax(userService.deleteUserByIds(userIds));
+    public ResultEntity remove(@PathVariable Long[] userIds) {
+        return result(userService.deleteUserByIds(userIds));
     }
 
     /**
      * 重置密码
      */
-    @PreAuthorize("@ss.hasPermi('system:user:edit')")
+    @PreAuthorize("@security.havePermission('system:user:edit')")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     @PutMapping("/resetPwd")
-    public AjaxResult resetPwd(@RequestBody SysUser user)
-    {
+    public ResultEntity resetPwd(@RequestBody SysUser user) {
         userService.checkUserAllowed(user);
         user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
         user.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(userService.resetPwd(user));
+        return result(userService.resetPwd(user));
     }
 
     /**
      * 状态修改
      */
-    @PreAuthorize("@ss.hasPermi('system:user:edit')")
+    @PreAuthorize("@security.havePermission('system:user:edit')")
     @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     @PutMapping("/changeStatus")
-    public AjaxResult changeStatus(@RequestBody SysUser user)
-    {
+    public ResultEntity changeStatus(@RequestBody SysUser user) {
         userService.checkUserAllowed(user);
         user.setUpdateBy(SecurityUtils.getUsername());
-        return toAjax(userService.updateUserStatus(user));
+        return result(userService.updateUserStatus(user));
     }
 }

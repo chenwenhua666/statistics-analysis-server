@@ -1,6 +1,8 @@
 package com.plm.project.monitor.controller;
 
 import java.util.List;
+
+import com.plm.framework.web.domain.ResultEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,56 +14,50 @@ import com.plm.common.utils.poi.ExcelUtil;
 import com.plm.framework.aspectj.lang.annotation.Log;
 import com.plm.framework.aspectj.lang.enums.BusinessType;
 import com.plm.framework.web.controller.BaseController;
-import com.plm.framework.web.domain.AjaxResult;
 import com.plm.framework.web.page.TableDataInfo;
 import com.plm.project.monitor.domain.SysLogininfor;
 import com.plm.project.monitor.service.ISysLogininforService;
 
 /**
  * 系统访问记录
- * 
- * @author cwh
+ *
+ * @author plm
  */
 @RestController
 @RequestMapping("/monitor/logininfor")
-public class SysLogininforController extends BaseController
-{
+public class SysLogininforController extends BaseController {
     @Autowired
     private ISysLogininforService logininforService;
 
-    @PreAuthorize("@ss.hasPermi('monitor:logininfor:list')")
+    @PreAuthorize("@security.havePermission('monitor:logininfor:list')")
     @GetMapping("/list")
-    public TableDataInfo list(SysLogininfor logininfor)
-    {
+    public TableDataInfo list(SysLogininfor logininfor) {
         startPage();
         List<SysLogininfor> list = logininforService.selectLogininforList(logininfor);
         return getDataTable(list);
     }
 
     @Log(title = "登陆日志", businessType = BusinessType.EXPORT)
-    @PreAuthorize("@ss.hasPermi('monitor:logininfor:export')")
+    @PreAuthorize("@security.havePermission('monitor:logininfor:export')")
     @GetMapping("/export")
-    public AjaxResult export(SysLogininfor logininfor)
-    {
+    public ResultEntity export(SysLogininfor logininfor) {
         List<SysLogininfor> list = logininforService.selectLogininforList(logininfor);
         ExcelUtil<SysLogininfor> util = new ExcelUtil<SysLogininfor>(SysLogininfor.class);
         return util.exportExcel(list, "登陆日志");
     }
 
-    @PreAuthorize("@ss.hasPermi('monitor:logininfor:remove')")
+    @PreAuthorize("@security.havePermission('monitor:logininfor:remove')")
     @Log(title = "登陆日志", businessType = BusinessType.DELETE)
     @DeleteMapping("/{infoIds}")
-    public AjaxResult remove(@PathVariable Long[] infoIds)
-    {
-        return toAjax(logininforService.deleteLogininforByIds(infoIds));
+    public ResultEntity remove(@PathVariable Long[] infoIds) {
+        return result(logininforService.deleteLogininforByIds(infoIds));
     }
 
-    @PreAuthorize("@ss.hasPermi('monitor:logininfor:remove')")
+    @PreAuthorize("@security.havePermission('monitor:logininfor:remove')")
     @Log(title = "登陆日志", businessType = BusinessType.CLEAN)
     @DeleteMapping("/clean")
-    public AjaxResult clean()
-    {
+    public ResultEntity clean() {
         logininforService.cleanLogininfor();
-        return AjaxResult.success();
+        return ResultEntity.success();
     }
 }

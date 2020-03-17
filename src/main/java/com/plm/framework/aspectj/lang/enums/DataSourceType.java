@@ -2,11 +2,10 @@ package com.plm.framework.aspectj.lang.enums;
 
 /**
  * 数据源
- * 
+ *
  * @author cwh
  */
-public enum DataSourceType
-{
+public enum DataSourceType {
     /**
      * 主库
      */

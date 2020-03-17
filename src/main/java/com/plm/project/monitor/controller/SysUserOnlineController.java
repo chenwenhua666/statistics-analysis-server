@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,58 +19,45 @@ import com.plm.framework.aspectj.lang.enums.BusinessType;
 import com.plm.framework.redis.RedisCache;
 import com.plm.framework.security.LoginUser;
 import com.plm.framework.web.controller.BaseController;
-import com.plm.framework.web.domain.AjaxResult;
+import com.plm.framework.web.domain.ResultEntity;
 import com.plm.framework.web.page.TableDataInfo;
 import com.plm.project.monitor.domain.SysUserOnline;
 import com.plm.project.system.service.ISysUserOnlineService;
 
 /**
  * 在线用户监控
- * 
- * @author cwh
+ *
+ * @author plm
  */
 @RestController
 @RequestMapping("/monitor/online")
-public class SysUserOnlineController extends BaseController
-{
+public class SysUserOnlineController extends BaseController {
     @Autowired
     private ISysUserOnlineService userOnlineService;
 
     @Autowired
     private RedisCache redisCache;
 
-    @PreAuthorize("@ss.hasPermi('monitor:online:list')")
+    @PreAuthorize("@security.havePermission('monitor:online:list')")
     @GetMapping("/list")
-    public TableDataInfo list(String ipaddr, String userName)
-    {
+    public TableDataInfo list(String ipaddr, String userName) {
         Collection<String> keys = redisCache.keys(Constants.LOGIN_TOKEN_KEY + "*");
         List<SysUserOnline> userOnlineList = new ArrayList<SysUserOnline>();
-        for (String key : keys)
-        {
+        for (String key : keys) {
             LoginUser user = redisCache.getCacheObject(key);
-            if (StringUtils.isNotEmpty(ipaddr) && StringUtils.isNotEmpty(userName))
-            {
-                if (StringUtils.equals(ipaddr, user.getIpaddr()) && StringUtils.equals(userName, user.getUsername()))
-                {
+            if (StringUtils.isNotEmpty(ipaddr) && StringUtils.isNotEmpty(userName)) {
+                if (StringUtils.equals(ipaddr, user.getIpaddr()) && StringUtils.equals(userName, user.getUsername())) {
                     userOnlineList.add(userOnlineService.selectOnlineByInfo(ipaddr, userName, user));
                 }
-            }
-            else if (StringUtils.isNotEmpty(ipaddr))
-            {
-                if (StringUtils.equals(ipaddr, user.getIpaddr()))
-                {
+            } else if (StringUtils.isNotEmpty(ipaddr)) {
+                if (StringUtils.equals(ipaddr, user.getIpaddr())) {
                     userOnlineList.add(userOnlineService.selectOnlineByIpaddr(ipaddr, user));
                 }
-            }
-            else if (StringUtils.isNotEmpty(userName) && StringUtils.isNotNull(user.getUser()))
-            {
-                if (StringUtils.equals(userName, user.getUsername()))
-                {
+            } else if (StringUtils.isNotEmpty(userName) && StringUtils.isNotNull(user.getUser())) {
+                if (StringUtils.equals(userName, user.getUsername())) {
                     userOnlineList.add(userOnlineService.selectOnlineByUserName(userName, user));
                 }
-            }
-            else
-            {
+            } else {
                 userOnlineList.add(userOnlineService.loginUserToUserOnline(user));
             }
         }
@@ -81,12 +69,11 @@ public class SysUserOnlineController extends BaseController
     /**
      * 强退用户
      */
-    @PreAuthorize("@ss.hasPermi('monitor:online:forceLogout')")
+    @PreAuthorize("@security.havePermission('monitor:online:forceLogout')")
     @Log(title = "在线用户", businessType = BusinessType.DELETE)
     @DeleteMapping("/{tokenId}")
-    public AjaxResult forceLogout(@PathVariable String tokenId)
-    {
+    public ResultEntity forceLogout(@PathVariable String tokenId) {
         redisCache.deleteObject(Constants.LOGIN_TOKEN_KEY + tokenId);
-        return AjaxResult.success();
+        return ResultEntity.success();
     }
 }
